@@ -1,3 +1,4 @@
+#include<stdio.h>
 /*
 *copy_string
 *-----------
@@ -14,6 +15,61 @@ void copy_string(char from_this[], char to_this[], int length){
         to_this[i] = from_this[i];    
         i++;
     }
+}
+
+/*
+*concatenate_string
+*------------------
+*Función para agregar mas caracteres al final de una string
+*va a recorrer la string hasta que encuentre '\0' o caracter nulo
+*que es donde termina la  string y lo reemplazara con el primer caracter
+*de la cadena que se agregara, se ira copiando caracter a caracter hasta que 
+*se encuentre '\0'
+*
+*argumentos:
+*-this_string: string base
+*-plus_this: string que se agregara al final de this_string
+*/
+void concatenate_string(char this_string[], char plus_this[]){
+    int i = 0;
+    int j = 0;
+    while(this_string[i] != '\0'){    
+        i++;
+    }
+    while(plus_this[j] != '\0'){
+        this_string[i] = plus_this[j];
+        j++;
+        i++;
+    }
+    this_string[i] = '\0';
+}
+
+/*
+* create_message
+* --------------
+* Lee una línea de entrada desde el teclado usando getchar() y la almacena
+* en el arreglo 'string'.
+*
+* La lectura se detiene cuando ocurre alguno de los siguientes casos:
+* - Se alcanza el fin de archivo (EOF)
+* - Se encuentra un salto de línea ('\n')
+* - Se alcanza la longitud máxima permitida (max_length - 1)
+*
+* Al finalizar, se agrega el carácter nulo ('\0') para indicar el final
+* de la cadena.
+*
+* Parámetros:
+* - message: arreglo donde se almacenará la cadena
+* - max_length: tamaño máximo del arreglo
+*/
+void create_message(char message[], size_t max_length){
+    int character;
+    int i = 0;
+    while(i< max_length - 1 && (character=getchar()) != EOF && character != '\n'){
+        message[i] = character;
+        i++;
+    }
+    message[i] = '\0';
 }
 
 /*
