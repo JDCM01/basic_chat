@@ -35,10 +35,5 @@ void insert_into_file(FILE *file_pointer, const char string[], size_t max_length
     while(i<max_length && string[i] != '\0' && (putc(string[i], file_pointer) != EOF)){
         i++;
     }
-    putc(32, file_pointer);/*32 en el estandar ascii es el espacio en blanco*/
 }
 
-
-void create_file_pointer(FILE *file_pointer, const char file_name[]){
-    file_pointer = fopen(file_name,"w+");//recordar hacer fclose(file_pointer cuando no lo este usando mas)
-}
