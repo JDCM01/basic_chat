@@ -1,5 +1,64 @@
 #include<stdio.h>
 /*
+*color_format
+*------------
+*Función para darle un color diferente a los mensajes, dependiendo de quien los
+*envie, si son mensajes del mismo cliente deben verse de color azul, si son
+*mensajes enviados por un cliente distinto de color morado y si son 
+*mensajes de parte del servidor deben verse de color amarillo
+*validara quien lo envio con ayuda de compare_strings 
+*dependiendo del emisor se dara un formato a la salida
+*Notas:
+*\033 le indica a la consola que debe cambiar el color de la cadena
+*\x1B le indica a la consola que debe cambiar el color de la cadena
+*[33m] el color sera amarillo
+*[34m] el color sera azul
+*[35m] el color sera magenta 
+*[0m] resetea el color
+*
+*Argumentos:
+*Message: el mensaje al cual se le dara formato para mostrarlo la estructura del mensaje sera:
+*"nombre_emisor"':'' '"mensaje"'\0' 
+*client_name: nombre del cliente 
+*/
+void color_format(char message[], char client_name[]){
+    char emissary[100];
+    extract_from_string(message, emissary, ':', 100);
+    if(compare_strings(client_name, emissary, 100) == 1){
+        printf("\n\x1B[34m %s\x1B[0m", message);
+    }
+    else if(compare_strings(emissary, "Server", 100) == 1){
+        printf("\n\x1B[33m %s\x1B[0m", message);
+    }
+    else if(compare_strings(emissary, client_name, 100) != 1){
+        printf("\n\x1B[35m %s\x1B[0m", message);
+
+    }
+}
+
+/*
+*extract_from_string
+*-------------------
+*Función para extraer solo un fragmento de una cadena
+*recorrera cada posición del array hasta encontrar un caracter especifico
+*o encuentre '\0' para seguridad, e ira copiando en piece cada caracter que encuentre
+*
+*argumentos:
+*string: cadena a la cual extraerle un fragmento
+*piece: array donde se guardara la string extraida
+*goal_character: caracter que indicara el punto de parada del ciclo deseada
+*MAX_SIZE: tamaño maximo que podra tener piece
+*/
+void extract_from_string(const char string[], char piece[], char goal_character ,size_t MAX_SIZE){
+    int i = 0;
+    while(i < MAX_SIZE - 1 && string[i] != '\0' && string[i] != goal_character){
+        piece[i] = string[i];
+        i++;
+    }
+    piece[i] = '\0';
+}
+
+/*
 *check_string
 *---------------
 *Función para verificar que el cliente no este usando un nombre de usuario ya registrado previamente 
