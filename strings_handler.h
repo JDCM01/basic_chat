@@ -1,5 +1,72 @@
 #include<stdio.h>
 /*
+*check_string
+*---------------
+*Función para verificar que el cliente no este usando un nombre de usuario ya registrado previamente 
+*ira de caracter en caracter dentro del fichero de usuarios hasta encontrar un ';'
+*una vez allí comparara lo que ha leido vs la cadena que ha proporcionado el cliente
+*en caso de ser iguales retornara un 1, en caso contrario continuara leyendo caracteres
+*
+*Argumentos:
+*string_to_validate: Nombre de usuario o contraseña proporcionado por el cliente 
+*MAX_SIZE: Longitud maxima de la cadena que se extraera del archivo
+*file_pointer: puntero al archivo donde se guardaran los nombres de los clientes registrados
+*option: Para poder reusar la función se necesita saber si se comprobara contraseña o nombre de 
+*usuario, por lo cual option indica si es 0 es es el nombre de usuario 
+*y debe ir recorriendo todo el archivo
+*si es 1 indica que se comprobara contraseña y solo debe ir hasta que encuentre salto de linea
+*o EOF
+*
+*Retorna:
+*1: en caso de que el nombre de usuario ya se encuentre registrado o la contraseña coincida
+*0: en caso de que no se encuentre registrado
+*/
+
+int check_string(char string_to_validate[], size_t MAX_SIZE, FILE *file_pointer, int option){
+    char actual_string[MAX_SIZE];
+    int c, comparison_result;
+    int i = 0;
+    if(option == 0){
+        while((c = getc(file_pointer)) != EOF){
+            if(c == ';'){
+                actual_string[i] = '\0';
+                comparison_result = compare_strings(actual_string, string_to_validate, 100);
+                if(comparison_result == 1){
+                    return 1;
+                }
+                i = 0;
+            }
+            else{
+                if(c != '\n'){
+                    actual_string[i] = c;    
+                    i++;
+                }
+                
+            }
+        }
+        return 0;  
+    }
+    else{
+        while((c = getc(file_pointer)) != EOF && c != ';'){
+            if(c != '\n' && c != ';'){
+                actual_string[i] = c;
+                i++;
+            }
+            
+        }
+        actual_string[i] = '\0';
+        comparison_result = compare_strings(actual_string, string_to_validate, 100);
+        if(comparison_result == 1){
+            return 1;
+        }
+        else{
+            return 0;
+        }  
+    }
+}
+
+
+/*
 *copy_string
 *-----------
 *funcion para copiar los elementos de una string en otra
