@@ -1,12 +1,13 @@
 #include<stdio.h>
 #include<stdlib.h>
-#include"strings_handler.h"
-#include"list_handler.h"
-#include"file_handler.h"
-/*#include<sys/socket.h>
+#include"header.h"
+#include"list_handler.c"
+#include"file_handler.c"
+#include"strings_handler.c"
+#include<sys/socket.h>
 #include<arpa/inet.h>
 #include<netinet/in.h>
-#include<netdb.h>*/
+#include<netdb.h>
 
 /*
 *main
@@ -15,21 +16,51 @@
 *argumentos:
 *-argc: cantidad de argumentos pasados por consola en el caso de este programa debe ser igual a 4
 *-argv: array de argumentos pasados por consola, en el caso de este programa los argumentos
-*pasados por consola seran puerto y direccion ipv4 y 6 aunque para pruebas sencillas se 
+*pasados por consola seran puerto y address ipv4 y 6 aunque para pruebas sencillas se 
 *ignorara el ipv6, la posicion 0 sera nombre del programa server.c la posicion 1 sera puerto 
-*y la posicion 2 sera la direccion ip en caso de que se este manejando tambien direccion ipv6
-*sera la posicion 3 del vector
+*y la posicion 2 sera la address ipv4 en caso de que se este manejando, 
+*la posicion 3 del vector sera  address ipv6
 */
 
-void main(size_t argc, char *argv[]){
+void main(int argc, char *argv[]){
     List* stack = NULL; 
-    size_t MAX_SIZE = 100;
-    char server_port[port_size];
-    char server_ipv4[ipv4_size];
-    char server_ipv6[ipv6_size];
-    int result;
-    FILE *file_pointer = fopen("users.txt", "a+");
-    /*Ejemplo para darle acceso a alguien que ya se encuentra registrado
+    char server_port[PORT_SIZE];
+    char server_ipv4[IPV4_SIZE];
+    char server_ipv6[IPV6_SIZE];
+    get_arguments(server_port, argv[1], PORT_SIZE);
+    get_arguments(server_ipv4, argv[2], IPV4_SIZE);
+    get_arguments(server_ipv6, argv[3], IPV6_SIZE);
+    printf("\nEl puerto por el cual escuchara el servidor es: %s \nSu dirección ipv4 es: %s\nSu dirección ipv6 es: %s\n",server_port,server_ipv4,server_ipv6);    
+    /*
+    *Creando el socket
+    *AF_INET: Indica que se usara IPv4. Si se quiere llegara a usar IPv6, sería AF_INET6.
+    *SOCK_STREAM: Indica que se llevara a cabo 
+    *una conexión TCP. Para UDP se usa SOCK_DGRAM
+    *0: Protocolo por defecto osea IP
+    */
+    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    int opt = 1;
+
+    //Si el puerto está ocupado por una instancia anterior que acabo de cerrar, déjame reusarlo de inmediato
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    
+    //Dandole identidad al servidor
+    struct sockaddr_in address;
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY; // Escuchar en todas las IPs disponibles
+    address.sin_port = htons(8080);       // El puerto (htons convierte al orden de bytes de red)
+    //haciendo bind: Cualquier dato que llegue a este puerto específico, dáselo a este programa
+
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("Error en bind");
+        exit(EXIT_FAILURE);
+    }
+}
+
+/*FILE *file_pointer = fopen("users.txt", "a+");
+    fclose(file_pointer);*/
+
+ /*Ejemplo para darle acceso a alguien que ya se encuentra registrado
     result = check_string("David\0", MAX_SIZE, file_pointer, 0);
     
     if(result == 1){
@@ -61,4 +92,3 @@ void main(size_t argc, char *argv[]){
     char message3[] = "Daniel: Hola David tu ejemplo esta muy interesante";
     color_format(message3, piece);
     */
-}
