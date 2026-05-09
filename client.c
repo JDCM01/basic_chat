@@ -59,13 +59,11 @@ void main(){
     char answer[] = "Excelente ahora que me pude conectar";
 
     //recibiendo y enviando mensajes al server
-    int read_bytes = read(client_fd, answer, sizeof(answer) - 1);
+    int read_bytes = read(client_fd, message, sizeof(message) - 1);
     if (read_bytes > 0) {
-        answer[read_bytes] = '\0'; // Aseguramos que la cadena termine en nulo
-        printf("\nRespuesta por parte del cliente: %s\n", answer);
+        message[read_bytes] = '\0'; // Aseguramos que la cadena termine en nulo
+        printf("\nMensaje por parte del servidor: %s\n", message);
     }
-
-    printf("\nEl servidor ha enviado el siguiente mensaje: %s", message);
 
     write(client_fd, answer, string_length(answer) + 1);
 

@@ -23,8 +23,10 @@
 *la posicion 3 del vector sera  address ipv6
 */
 
-void main(int argc, char *argv[]){
-    List* stack = NULL; 
+//int argc, char *argv[]
+void main(){
+    List* stack = NULL;
+    /* 
     char server_port[PORT_SIZE];
     char server_ipv4[IPV4_SIZE];
     char server_ipv6[IPV6_SIZE];
@@ -32,6 +34,7 @@ void main(int argc, char *argv[]){
     get_arguments(server_ipv4, argv[2], IPV4_SIZE);
     get_arguments(server_ipv6, argv[3], IPV6_SIZE);
     printf("\nEl puerto por el cual escuchara el servidor es: %s \nSu dirección ipv4 es: %s\nSu dirección ipv6 es: %s\n",server_port,server_ipv4,server_ipv6);    
+    */
     /*
     *Creando el socket
     *AF_INET: Indica que se usara IPv4. Si se quiere llegara a usar IPv6, sería AF_INET6.
@@ -66,6 +69,8 @@ void main(int argc, char *argv[]){
     struct sockaddr_in client_address;
     socklen_t addr_len = sizeof(client_address);
 
+    printf("\nEl servidor se va a detener unos segundos hasta que algun cliente se conecte");
+
     //Deteniendo el proceso hasta que alguien se conecte
     int client_fd = accept(server_fd,(struct  sockaddr *)&client_address , &addr_len);
 
@@ -92,7 +97,7 @@ void main(int argc, char *argv[]){
         answer[bytes_leidos] = '\0'; // Aseguramos que la cadena termine en nulo
         printf("\nRespuesta por parte del cliente: %s\n", answer);
     }
-    
+
     //cerrando el socket
     close(server_fd);
     close(client_fd);
