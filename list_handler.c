@@ -1,32 +1,4 @@
-#include<stdlib.h>
-
-size_t ipv4_size = 20;
-size_t port_size = 4; 
-size_t ipv6_size = 41;
-
-/*Estructura Client
-*------------------
-*componentes:
-*port: puerto en el cual se dara la conversación
-*ipv4: dirección del cliente IPv4
-*ipv6: dirección del cliente IPv6
-*/
-typedef struct Client{
-    char ipv4_address[20];
-    char ipv6_address[41];
-    char port[4];
-}Client;
-
-/*Estructura List
-*------------------
-*componentes:
-*user: apuntador a una estructura Client
-*next: apuntador a la misma estructura que guardara la dirección de un siguiente nodo
-*/
-typedef struct List{
-    Client* user;
-    struct List* next;
-}List;
+#include"header.h"
 
 /*
 *show_list
@@ -63,12 +35,13 @@ void show_list(List* stack){
 *ipv6: dirección del cliente IPv6
 *stack: Lista de clientes conectados
 */
-void add_client(char port[], char ipv4[], char ipv6[], List** stack){
+void add_client(char client_name[], char port[], char ipv4[], char ipv6[], List** stack){
     Client* new_client = (Client*)malloc(sizeof(Client));
     List* new_node = (List*) malloc(sizeof(List));
-    copy_string(ipv4, new_client->ipv4_address, ipv4_size);
-    copy_string(ipv6, new_client->ipv6_address, ipv6_size);
-    copy_string(port, new_client->port, port_size);
+    copy_string(client_name, new_client->name, NAMES_SIZE);
+    copy_string(ipv4, new_client->ipv4_address, IPV4_SIZE);
+    copy_string(ipv6, new_client->ipv6_address, IPV6_SIZE);
+    copy_string(port, new_client->port, PORT_SIZE);
     new_node->user = new_client;
     if(stack == NULL){
         new_node->next = NULL;

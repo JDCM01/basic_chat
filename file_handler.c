@@ -1,4 +1,4 @@
-#include<stdio.h>
+#include"header.h"
 
 /*login
 *------
@@ -18,11 +18,11 @@
 */
 int login(FILE *file_pointer){
     int i = 0;
-    char password[100];
+    char password[MAX_SIZE];
     while(i <= 3){
         printf("\nPara poder continuar debera digitar su contraseña: ");
-        get_string(password, 100);
-        if(check_string(password, 100, file_pointer, 1) == 1){ 
+        get_string(password);
+        if(check_string(password, file_pointer, 1) == 1){ 
             return 1;
         }
         printf("\nContraseña incorrecta\n");    
@@ -47,13 +47,13 @@ void register_user(char user_name[], FILE *file_pointer){
     char string_to_insert[100];
     copy_string(user_name, string_to_insert, 100);
     printf("\n%s bienvenido al chat para poder registrarse debera digitar una contraseña: ", string_to_insert);
-    get_string(password, 100);//Antes de entregar el chat hay que hacer fuciones para encriptar y desencriptar la contraseña
-    insert_into_file(file_pointer, "\n", 100);
+    get_string(password);    
+    insert_into_file(file_pointer, "\n");
     concatenate_string(string_to_insert, ";\0");
     concatenate_string(string_to_insert, password);
     concatenate_string(string_to_insert, ";\0");
     concatenate_string(string_to_insert, "\n\0");
-    insert_into_file(file_pointer, string_to_insert, 100);
+    insert_into_file(file_pointer, string_to_insert);
 }
 
 
@@ -87,9 +87,9 @@ void print_from_file(FILE *file_pointer){
 *-string: vetor de caracteres a insertar en el archivo
 *-max_length: tamaño maximo del vector
 */
-void insert_into_file(FILE *file_pointer, const char string[], size_t max_length){
+void insert_into_file(FILE *file_pointer, const char string[]){
     int i = 0;
-    while(i<max_length && string[i] != '\0' && (putc(string[i], file_pointer) != EOF)){
+    while(i < MAX_SIZE - 1 && string[i] != '\0' && (putc(string[i], file_pointer) != EOF)){
         i++;
     }
 }

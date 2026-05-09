@@ -1,4 +1,5 @@
-#include<stdio.h>
+
+#include"header.h"
 /*
 *color_format
 *------------
@@ -22,15 +23,15 @@
 *client_name: nombre del cliente 
 */
 void color_format(char message[], char client_name[]){
-    char emissary[100];
-    extract_from_string(message, emissary, ':', 100);
-    if(compare_strings(client_name, emissary, 100) == 1){
+    char emissary[MAX_SIZE];
+    extract_from_string(message, emissary, ':');
+    if(compare_strings(client_name, emissary) == 1){
         printf("\n\x1B[34m %s\x1B[0m", message);
     }
-    else if(compare_strings(emissary, "Server", 100) == 1){
+    else if(compare_strings(emissary, "Server") == 1){
         printf("\n\x1B[33m %s\x1B[0m", message);
     }
-    else if(compare_strings(emissary, client_name, 100) != 1){
+    else if(compare_strings(emissary, client_name) != 1){
         printf("\n\x1B[35m %s\x1B[0m", message);
 
     }
@@ -47,9 +48,8 @@ void color_format(char message[], char client_name[]){
 *string: cadena a la cual extraerle un fragmento
 *piece: array donde se guardara la string extraida
 *goal_character: caracter que indicara el punto de parada del ciclo deseada
-*MAX_SIZE: tamaño maximo que podra tener piece
 */
-void extract_from_string(const char string[], char piece[], char goal_character ,size_t MAX_SIZE){
+void extract_from_string(const char string[], char piece[], char goal_character){
     int i = 0;
     while(i < MAX_SIZE - 1 && string[i] != '\0' && string[i] != goal_character){
         piece[i] = string[i];
@@ -68,7 +68,6 @@ void extract_from_string(const char string[], char piece[], char goal_character 
 *
 *Argumentos:
 *string_to_validate: Nombre de usuario o contraseña proporcionado por el cliente 
-*MAX_SIZE: Longitud maxima de la cadena que se extraera del archivo
 *file_pointer: puntero al archivo donde se guardaran los nombres de los clientes registrados
 *option: Para poder reusar la función se necesita saber si se comprobara contraseña o nombre de 
 *usuario, por lo cual option indica si es 0 es es el nombre de usuario 
@@ -81,7 +80,7 @@ void extract_from_string(const char string[], char piece[], char goal_character 
 *0: en caso de que no se encuentre registrado
 */
 
-int check_string(char string_to_validate[], size_t MAX_SIZE, FILE *file_pointer, int option){
+int check_string(char string_to_validate[], FILE *file_pointer, int option){
     char actual_string[MAX_SIZE];
     int c, comparison_result;
     int i = 0;
@@ -89,7 +88,7 @@ int check_string(char string_to_validate[], size_t MAX_SIZE, FILE *file_pointer,
         while((c = getc(file_pointer)) != EOF){
             if(c == ';'){
                 actual_string[i] = '\0';
-                comparison_result = compare_strings(actual_string, string_to_validate, 100);
+                comparison_result = compare_strings(actual_string, string_to_validate);
                 if(comparison_result == 1){
                     return 1;
                 }
@@ -114,7 +113,7 @@ int check_string(char string_to_validate[], size_t MAX_SIZE, FILE *file_pointer,
             
         }
         actual_string[i] = '\0';
-        comparison_result = compare_strings(actual_string, string_to_validate, 100);
+        comparison_result = compare_strings(actual_string, string_to_validate);
         if(comparison_result == 1){
             return 1;
         }
@@ -224,13 +223,12 @@ void concatenate_string(char this_string[], char plus_this[]){
 *Argumentos:
 *string_a: La primera de las dos strings
 *string_b: La segunda de las dos strings
-*MAX_SIZE: valor máximo que podra tener la cadena
 *
 *Retorna:
 *1 si recorre ambas strings hasta encontrar '\0' en ambas cadenas
 *0 en cualquier otro caso
 */
-int compare_strings(char string_a[], char string_b[], size_t MAX_SIZE){
+int compare_strings(char string_a[], char string_b[]){
     int i = 0;
     while(i < MAX_SIZE && (string_a[i] != '\0') && (string_b[i] != '\0') ){
         if(string_a[i] != string_b[i]){
@@ -261,12 +259,11 @@ int compare_strings(char string_a[], char string_b[], size_t MAX_SIZE){
 *
 * Parámetros:
 * - message: arreglo donde se almacenará la cadena
-* - max_length: tamaño máximo del arreglo
 */
-void get_string(char message[], size_t max_length){
+void get_string(char message[]){
     int character;
     int i = 0;
-    while(i< max_length - 1 && (character=getchar()) != EOF && character != '\n'){
+    while(i< MAX_SIZE - 1 && (character=getchar()) != EOF && character != '\n'){
         message[i] = character;
         i++;
     }
@@ -287,11 +284,12 @@ void get_string(char message[], size_t max_length){
 *argumentos:
 *-string_length: longitud maxima o ultima posicion de la string en la cual estoy volcando la informacion
 *-argv: array de uno de los argumentos pasados por consola
+*-argument_length: longitud del array argv
 */
-void get_arguments(char string[], char argv[], size_t string_length){
+void get_arguments(char string[], char argv[], size_t argument_length){
     int i = 0;
     int c;
-    while(i < string_length - 1 && argv[i] != EOF){//&& (argv += i) != EOF
+    while(i < argument_length - 1 && argv[i] != EOF){//&& (argv += i) != EOF
         string[i] = argv[i];
         i++;
     }
