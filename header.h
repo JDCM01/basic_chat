@@ -145,6 +145,26 @@ void concatenate_string(char this_string[], char plus_this[]);
 int compare_strings(char string_a[], char string_b[]);
 
 /*
+* string_length:
+* --------------
+* Calcula la longitud de una cadena de caracteres recorriendo el arreglo
+* hasta encontrar el carácter nulo ('\0') o hasta alcanzar el tamaño máximo
+* especificado.
+*
+* Este límite evita leer fuera del arreglo en caso de que la cadena no esté
+* correctamente terminada en '\0'.
+*
+* Parámetros:
+* - string: arreglo de caracteres (cadena)
+* - max_length: número máximo de caracteres a inspeccionar
+*
+* Retorna:
+* - La cantidad de caracteres recorridos antes de encontrar '\0'
+*   o alcanzar max_length.
+*/
+int string_length(const char string[]);
+
+/*
 * get_string
 * ----------
 * Lee una línea de entrada desde el teclado usando getchar() y la almacena
