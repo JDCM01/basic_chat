@@ -56,7 +56,7 @@ void main(){
     }
     
     char message[MAX_SIZE];
-    char answer[] = "Excelente ahora que me pude conectar";
+    char answer[] = "David\0";
 
     //recibiendo y enviando mensajes al server
     int read_bytes = read(client_fd, message, sizeof(message) - 1);
@@ -65,7 +65,7 @@ void main(){
         printf("\nMensaje por parte del servidor: %s\n", message);
     }
 
-    write(client_fd, answer, string_length(answer) + 1);
+    write(client_fd, answer, string_length(answer, NAMES_SIZE));
 
     close(client_fd);
 
