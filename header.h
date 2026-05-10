@@ -4,6 +4,11 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#include<sys/socket.h>
+#include<arpa/inet.h>
+#include<netinet/in.h>
+#include<netdb.h>
+#include <unistd.h>
 
 /*Constantes
 *-----------
@@ -18,6 +23,7 @@
 #define IPV4_SIZE  16
 #define IPV6_SIZE 46
 #define PORT_SIZE 5
+
 
 /*Funciones para el manejo de las strings*/
 
@@ -93,7 +99,7 @@ int check_string(char string_to_validate[], FILE *file_pointer, int option);
 *-to_this: lugar donde alojare la copia
 *-length: ultima posicion del array
 */
-void copy_string(char from_this[], char to_this[], int length);
+void copy_string(char from_this[], char to_this[], size_t LENGTH);
 
 /*
 *from_int_to_char
@@ -162,7 +168,7 @@ int compare_strings(char string_a[], char string_b[]);
 * - La cantidad de caracteres recorridos antes de encontrar '\0'
 *   o alcanzar max_length.
 */
-int string_length(const char string[]);
+int string_length(const char string[], size_t LENGTH);
 
 /*
 * get_string
@@ -271,9 +277,7 @@ void insert_into_file(FILE *file_pointer, const char string[]);
 */
 typedef struct Client{
     char name[NAMES_SIZE];
-    char ipv4_address[IPV4_SIZE];
-    char ipv6_address[IPV6_SIZE];
-    char port[PORT_SIZE];
+    int client_fd;
 }Client;
 
 /*Estructura List
@@ -291,7 +295,7 @@ typedef struct List{
 *show_list
 *---------
 *función que recorrera una lista compuesta de nodos que seran estructuras Client
-*mostrando los elementos de la estructura(puerto, ipv4, ipv6)
+*mostrando el nombre de cada cliente conectado
 *hasta que se cumpla la condición de parada que el nodo actual sea igual a NULL osea que no halla nodo 
 *
 *Argumentos:
@@ -300,22 +304,33 @@ typedef struct List{
 void show_list(List* stack);
 
 /*
+*close_sockets
+*-------------
+*función que recorrera una lista compuesta de nodos que seran estructuras Client
+*cerrando los sockets y liberando los espacios 
+*en memoria hasta que se cumpla la condición de parada: que el nodo actual
+*sea igual a NULL osea que no halla nodo 
+*
+*Argumentos:
+*stack: lista de clientes conectados al servidor
+*/
+void close_sockets(List** stack);
+
+/*
 *add_client
 *----------
-*Función para guardar espacio en memoria para un cliente que tendra dirección ipv4, 6 y puerto
-*añadiendolo a la lista, hay dos casos posibles:
+*Función para guardar espacio en memoria para un cliente y agregarlo a la lista 
+*de usuarios conectados, hay tres casos posibles a la hora de agregarlo
 *Caso 1, no hay nadie en la lista, en este caso stack sera igual al nuevo nodo creado
 *Caso 2, ya hay gente en la lista, por lo cual el componente next de el nodo recien creado
 *sera igual al primer nodo de la lista y este nodo recien creado
 *sera el nuevo primer elemento de la lista
 *
 *Argumentos:
-*port: puerto en el cual se dara la conversación
-*ipv4: dirección del cliente IPv4
-*ipv6: dirección del cliente IPv6
+*server_fd:
 *stack: Lista de clientes conectados
 */
-void add_client(char client_name[], char port[], char ipv4[], char ipv6[], List** stack);
+void add_client(int server_fd, List** stack);
 
 #endif
 
