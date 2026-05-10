@@ -53,6 +53,7 @@ void main(){
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY; // Escuchar en todas las IPs disponibles
     address.sin_port = htons(8080);       // El puerto (htons convierte al orden de bytes de red)
+    printf("\nEl servidor se va a detener unos segundos hasta que algun cliente se conecte");
     
     //haciendo bind: Cualquier dato que llegue a este puerto específico, dáselo a este programa
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
@@ -65,42 +66,8 @@ void main(){
         exit(EXIT_FAILURE);
     }
 
-    //creando una nueva estructura para el cliente que se conecte
-    struct sockaddr_in client_address;
-    socklen_t addr_len = sizeof(client_address);
-
-    printf("\nEl servidor se va a detener unos segundos hasta que algun cliente se conecte");
-
-    //Deteniendo el proceso hasta que alguien se conecte
-    int client_fd = accept(server_fd,(struct  sockaddr *)&client_address , &addr_len);
-
-    //capturando el error en caso de que algo falle en la conexión
-    if (client_fd < 0) {
-        perror("Error al aceptar");
-        exit(EXIT_FAILURE);
-    }
-
-    printf("\nNuevo cliente conectado");
-
-    //Ahora se pueden hacer writes y reads, write envia y read lee lo recibido
-    char message[] = "Hola cliente como estas el dia de hoy";
-    char answer[MAX_SIZE];
-    
-    // se envia un mensaje usando el descriptor del cliente osea lo que retorna el accept
-    // Usamos strlen para enviar solo los caracteres necesarios (+1 para el '\0')
-    write(client_fd, message, string_length(message) + 1);
-    
-    // Se lee lo que el cliente mande
-    // read devuelve la cantidad de bytes leídos
-    int bytes_leidos = read(client_fd, answer, sizeof(answer) - 1);
-    if (bytes_leidos > 0) {
-        answer[bytes_leidos] = '\0'; // Aseguramos que la cadena termine en nulo
-        printf("\nRespuesta por parte del cliente: %s\n", answer);
-    }
-
-    //cerrando el socket
-    close(server_fd);
-    close(client_fd);
+    add_client(server_fd, &stack);
+    close_sockets(&stack);
 
 }
 
@@ -138,4 +105,7 @@ void main(){
     color_format(message2, piece);
     char message3[] = "Daniel: Hola David tu ejemplo esta muy interesante";
     color_format(message3, piece);
+    //cerrando el socket
+    close(server_fd);
+    close(client_fd);
     */
