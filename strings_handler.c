@@ -134,12 +134,13 @@ int check_string(char string_to_validate[], FILE *file_pointer, int option){
 *-to_this: lugar donde alojare la copia
 *-length: ultima posicion del array
 **/
-void copy_string(char from_this[], char to_this[], int length){
+void copy_string(char from_this[], char to_this[], size_t LENGTH){
     int i = 0;
-    while(i < length){
+    while(i < LENGTH && from_this[i] != '\0'){
         to_this[i] = from_this[i];    
         i++;
     }
+    to_this[i] = '\0'; 
 }
 
 /*
@@ -262,9 +263,9 @@ int compare_strings(char string_a[], char string_b[]){
 *   o alcanzar max_length.
 */
 
-int string_length(const char string[]){
+int string_length(const char string[], size_t LENGTH){
     int i = 0;
-    while(i < MAX_SIZE - 1 && string[i] != '\0'){
+    while(i < LENGTH - 1 && string[i] != '\0'){
         i += 1;
     }
     return i;
