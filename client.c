@@ -8,7 +8,9 @@
 #include<arpa/inet.h>
 #include<netinet/in.h>
 #include<netdb.h>
-#include <unistd.h>
+#include<unistd.h>
+
+
 
 /*
 *main
@@ -55,18 +57,17 @@ void main(){
         exit(EXIT_FAILURE);
     }
     
-    char message[MAX_SIZE];
-    char answer[] = "David\0";
-
-    //recibiendo y enviando mensajes al server
-    int read_bytes = read(client_fd, message, sizeof(message) - 1);
-    if (read_bytes > 0) {
-        message[read_bytes] = '\0'; // Aseguramos que la cadena termine en nulo
-        printf("\nMensaje por parte del servidor: %s\n", message);
-    }
-
-    write(client_fd, answer, string_length(answer, NAMES_SIZE));
-
+    char incoming_message[MAX_SIZE];
+    char access[MAX_SIZE];
+    char user_name[NAMES_SIZE];
+    char emissary[NAMES_SIZE];
+    color_format("Server: Para poder unirse al chat digite el nombre de usuario que desea usar: \0", "\0");
+    get_string(user_name);
+    write(client_fd, user_name, string_length(user_name, NAMES_SIZE));
+    //receive_message(client_fd, user_name);
+    //while(compare_strings(access, "granted\0") == 0){
+    receive_and_send(client_fd, access, user_name, MAX_SIZE, NAMES_SIZE);
+    //}
+    read(client_fd, incoming_message, sizeof(incoming_message));
     close(client_fd);
-
 }

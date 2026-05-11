@@ -10,6 +10,8 @@
 #include<netdb.h>
 #include <unistd.h>
 
+
+
 /*
 *main
 *----
@@ -42,6 +44,7 @@ void main(){
     *una conexión TCP. Para UDP se usa SOCK_DGRAM
     *0: Protocolo por defecto osea IP
     */
+    color_format("Server: El servidor se va a detener unos segundos hasta que algun cliente se conecte\0", "Server\0");
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     int opt = 1;
 
@@ -53,7 +56,6 @@ void main(){
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY; // Escuchar en todas las IPs disponibles
     address.sin_port = htons(8080);       // El puerto (htons convierte al orden de bytes de red)
-    printf("\nEl servidor se va a detener unos segundos hasta que algun cliente se conecte");
     
     //haciendo bind: Cualquier dato que llegue a este puerto específico, dáselo a este programa
     if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
@@ -67,6 +69,7 @@ void main(){
     }
 
     add_client(server_fd, &stack);
+    show_list(stack);
     close_sockets(&stack);
 
 }

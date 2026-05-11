@@ -1,5 +1,38 @@
 #include"header.h"
 
+/*send_and_receive
+*-----------------
+*Funcion para enviar mensajes a un cliente y recibir su respuesta copiandola 
+*a un array que despues puedo manipular
+*
+*Argumentos:
+*client_fd: descriptor de archivo para el socket del cliente
+*message: Mensaje que se le enviara al cliente 
+*answer: Respuesta que proporcionara el cliente
+*MESSAGE_LENGTH: longitud del array del mensaje a enviar
+*ANSWER_LENGTH: Longitud del array de la respuesta por parte del cliente
+*/
+void send_and_receive(int client_fd, char message[], char answer[], char receiver[], size_t MESSAGE_LENGTH, size_t ANSWER_LENGTH){
+    char recv[ANSWER_LENGTH];
+    char message_to_send[MESSAGE_LENGTH];
+    copy_string(receiver, message_to_send, string_length(receiver, MESSAGE_LENGTH));
+    concatenate_string(message_to_send, ": ", MESSAGE_LENGTH);
+    concatenate_string(message_to_send, message, MESSAGE_LENGTH);
+
+    // se envia un mensaje usando el descriptor del cliente osea lo que retorna el accept
+    // Usamos string_length para enviar solo los caracteres necesarios (+1 para el '\0')
+    write(client_fd, message_to_send, string_length(message_to_send, MESSAGE_LENGTH));
+    
+    // Se lee lo que el cliente mande
+    // read devuelve la cantidad de bytes leídos
+    int bytes_leidos = read(client_fd, recv, sizeof(recv));
+    if (bytes_leidos > 0) {
+        recv[bytes_leidos] = '\0'; // Aseguramos que la cadena termine en nulo
+        copy_string(recv, answer, string_length(recv, ANSWER_LENGTH));
+        color_format(answer, receiver);
+    }
+}
+
 /*login
 *------
 *Función para comparar una contraseña que entregue el usuario con la que se
@@ -9,25 +42,30 @@
 *si se equivoca mas de 3 veces en digitar la contraseña se le denegara el acceso
 *
 *Argumentos:
-*-password: contraseña proporcionada por el cliente
+*client_fd: descriptor de archivos del socket del cliente
 *-file_pointer: Apuntador al archivo users.txt donde se encuentran los usuarios y las contraseñas
 *
 *Retorno:
 *0: Si se deniega el acceso
 *1: Si se concede el acceso
 */
-int login(FILE *file_pointer){
+int login(int client_fd, FILE *file_pointer){
     int i = 0;
+    char answer[MAX_SIZE];
+    char message[] = "Para poder continuar debera digitar su contraseña: \0";
     char password[MAX_SIZE];
-    while(i <= 3){
-        printf("\nPara poder continuar debera digitar su contraseña: ");
-        get_string(password);
-        if(check_string(password, file_pointer, 1) == 1){ 
-            return 1;
-        }
-        printf("\nContraseña incorrecta\n");    
-        i++;
-    }
+    char ack[MAX_SIZE];
+    char access[] = "Server: granted\0";
+    char blocking[] = "Server: denied\0";
+    //while(i <= 3){
+    send_and_receive(client_fd, message, answer, "Server\0", MAX_SIZE, MAX_SIZE);
+    if(check_string(answer, file_pointer, 1) == 1){ 
+        write(client_fd, access, string_length(access, MAX_SIZE));
+        return 1;
+    }   
+        //i++;
+    //}
+    write(client_fd, blocking, string_length(blocking, MAX_SIZE));
     return 0;
 }
 
@@ -39,21 +77,25 @@ int login(FILE *file_pointer){
 *usuario en users.txt  
 *
 *Argumentos:
+*client_fd: descriptor de archivo del socket del cliente
 *user_name: nombre del usuario a registrar
 *file_pointer: apuntador al archivo users.txt  
 */
-void register_user(char user_name[], FILE *file_pointer){
-    char password[100];
-    char string_to_insert[100];
-    copy_string(user_name, string_to_insert, 100);
-    printf("\n%s bienvenido al chat para poder registrarse debera digitar una contraseña: ", string_to_insert);
-    get_string(password);    
+void register_user(int client_fd, char user_name[],FILE *file_pointer){
+    char password[MAX_SIZE];
+    char user_to_register[MAX_SIZE];
+    char ack[MAX_SIZE];
+    copy_string(user_name, user_to_register, 100);
+    char message[] = "Bienvenido al chat para poder registrarse debe digitar una contraseña\0";
+    send_and_receive(client_fd, message, user_to_register, "Server\0", MAX_SIZE, MAX_SIZE);    
     insert_into_file(file_pointer, "\n");
-    concatenate_string(string_to_insert, ";\0");
-    concatenate_string(string_to_insert, password);
-    concatenate_string(string_to_insert, ";\0");
-    concatenate_string(string_to_insert, "\n\0");
-    insert_into_file(file_pointer, string_to_insert);
+    concatenate_string(user_to_register, ";", MAX_SIZE);
+    concatenate_string(user_to_register, password, MAX_SIZE);
+    concatenate_string(user_to_register, ";", MAX_SIZE);
+    concatenate_string(user_to_register, "\n\0", MAX_SIZE);
+    insert_into_file(file_pointer, user_to_register);
+    write(client_fd, "granted\0", string_length("granted\0", MAX_SIZE));
+    read(client_fd, ack, MAX_SIZE);
 }
 
 

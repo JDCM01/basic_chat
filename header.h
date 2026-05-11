@@ -8,7 +8,7 @@
 #include<arpa/inet.h>
 #include<netinet/in.h>
 #include<netdb.h>
-#include <unistd.h>
+#include<unistd.h>
 
 /*Constantes
 *-----------
@@ -24,8 +24,44 @@
 #define IPV6_SIZE 46
 #define PORT_SIZE 5
 
+/*send_and_receive
+*-----------------
+*Funcion para enviar mensajes a un cliente y recibir su respuesta copiandola 
+*a un array que despues puedo manipular
+*
+*Argumentos:
+*client_fd: descriptor de archivo para el socket del cliente
+*message: Mensaje que se le enviara al cliente 
+*answer: Respuesta que proporcionara el cliente
+*MESSAGE_LENGTH: longitud del array del mensaje a enviar
+*ANSWER_LENGTH: Longitud del array de la respuesta por parte del cliente
+*/
+void send_and_receive(int client_fd, char message[], char answer[], char receiver[], size_t MESSAGE_LENGTH, size_t ANSWER_LENGTH);
 
 /*Funciones para el manejo de las strings*/
+
+/*receive_message
+*----------------
+*Función que se encargara de recibir un mensaje y darselo a color_format
+*
+*Argumentos:
+*client_fd: descriptor de archivos del socket del cliente
+*receiver: nombre del que esta recibiendo el mensaje
+*/
+void receive_message(int client_fd, char receiver[]);
+
+/*receive_and_send
+*Funcion para enviar mensajes a un cliente y recibir su respuesta copiandola 
+*a un array que despues puedo manipular
+*
+*Argumentos:
+*client_fd: descriptor de archivo para el socket del cliente
+*incoming_message: Mensaje entrante por parte del servidor 
+*MESSAGE_LENGTH: longitud del array del mensaje a enviar
+*ANSWER_LENGTH: Longitud del array de la respuesta por parte del cliente
+*/
+void receive_and_send(int client_fd, char incoming_message[], char receiver[],size_t MESSAGE_LENGTH, size_t ANSWER_LENGTH);
+
 
 /*
 *color_format
@@ -33,7 +69,7 @@
 *Función para darle un color diferente a los mensajes, dependiendo de quien los
 *envie, si son mensajes del mismo cliente deben verse de color azul, si son
 *mensajes enviados por un cliente distinto de color morado y si son 
-*mensajes de parte del servidor deben verse de color amarillo
+*mensajes de parte del servidor "Server" deben verse de color amarillo
 *validara quien lo envio con ayuda de compare_strings 
 *dependiendo del emisor se dara un formato a la salida
 *Notas:
@@ -49,7 +85,7 @@
 *"nombre_emisor"':'' '"mensaje"'\0' 
 *client_name: nombre del cliente 
 */
-void color_format(char message[], char client_name[]);
+void color_format(char message[], char receiver[]);
 
 /*
 *extract_from_string
@@ -86,7 +122,6 @@ void extract_from_string(const char string[], char piece[], char goal_character)
 *1: en caso de que el nombre de usuario ya se encuentre registrado o la contraseña coincida
 *0: en caso de que no se encuentre registrado
 */
-
 int check_string(char string_to_validate[], FILE *file_pointer, int option);
 
 /*
@@ -129,7 +164,7 @@ char from_int_to_char(int character);
 *-this_string: string base
 *-plus_this: string que se agregara al final de this_string
 */
-void concatenate_string(char this_string[], char plus_this[]);
+void concatenate_string(char this_string[], char plus_this[], size_t MAX_LENGTH);
 
 /*
 *compare_strings
@@ -217,15 +252,14 @@ void get_arguments(char string[], char argv[], size_t argument_length);
 *si se equivoca mas de 3 veces en digitar la contraseña se le denegara el acceso
 *
 *Argumentos:
-*-password: contraseña proporcionada por el cliente
+*client_fd: descriptor de archivos del socket del cliente
 *-file_pointer: Apuntador al archivo users.txt donde se encuentran los usuarios y las contraseñas
 *
 *Retorno:
 *0: Si se deniega el acceso
 *1: Si se concede el acceso
 */
-int login(FILE *file_pointer);
-
+int login(int client_fd, FILE *file_pointer);
 /*
 *register_user
 *-------------
@@ -234,10 +268,11 @@ int login(FILE *file_pointer);
 *usuario en users.txt  
 *
 *Argumentos:
+*client_fd: descriptor de archivo del socket del cliente
 *user_name: nombre del usuario a registrar
 *file_pointer: apuntador al archivo users.txt  
 */
-void register_user(char user_name[], FILE *file_pointer);
+void register_user(int client_fd, char user_name[], FILE *file_pointer);
 
 /*
 *print_from_file
@@ -331,6 +366,7 @@ void close_sockets(List** stack);
 *stack: Lista de clientes conectados
 */
 void add_client(int server_fd, List** stack);
+
 
 #endif
 

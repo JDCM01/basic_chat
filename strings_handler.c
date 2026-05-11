@@ -1,12 +1,68 @@
 
 #include"header.h"
+
+/*receive_message
+*----------------
+*Función que se encargara de recibir un mensaje y darselo a color_format
+*
+*Argumentos:
+*client_fd: descriptor de archivos del socket del cliente
+*receiver: nombre del que esta recibiendo el mensaje
+*/
+void receive_message(int client_fd, char receiver[]){
+    char recv[MAX_SIZE];
+    char emissary[NAMES_SIZE];
+    int bytes_leidos = read(client_fd, recv, sizeof(recv));
+    if (bytes_leidos > 0) {
+        recv[bytes_leidos] = '\0'; // Aseguramos que la cadena termine en nulo
+        extract_from_string(recv, emissary, ':');
+        color_format(recv, receiver);
+    }
+}
+
+/*receive_and send
+*-----------------
+*Funcion para enviar mensajes a un cliente y recibir su respuesta copiandola 
+*a un array que despues puedo manipular
+*
+*Argumentos:
+*client_fd: descriptor de archivo para el socket del cliente
+*incoming_message: Mensaje entrante por parte del servidor 
+*MESSAGE_LENGTH: longitud del array del mensaje a enviar
+*ANSWER_LENGTH: Longitud del array de la respuesta por parte del cliente
+*/
+void receive_and_send(int client_fd, char incoming_message[], char receiver[],size_t MESSAGE_LENGTH, size_t ANSWER_LENGTH){
+    char recv[MESSAGE_LENGTH];
+    char answer[ANSWER_LENGTH];
+    char message_to_send[MESSAGE_LENGTH];
+
+    // Se lee lo que el cliente mande
+    // read devuelve la cantidad de bytes leídos    
+    int bytes_leidos = read(client_fd, recv, sizeof(recv));
+    if (bytes_leidos > 0) {
+        recv[bytes_leidos] = '\0'; // Aseguramos que la cadena termine en nulo
+        copy_string(recv, incoming_message, string_length(recv, MESSAGE_LENGTH));
+        color_format(incoming_message, receiver);
+    }
+
+    printf("\nMensaje: ");
+    get_string(answer);
+    copy_string(receiver, message_to_send, string_length(receiver, MESSAGE_LENGTH));
+    concatenate_string(message_to_send, ": ", MESSAGE_LENGTH);
+    concatenate_string(message_to_send, answer, MESSAGE_LENGTH);
+
+    // se recibe un mensaje usando el descriptor del cliente osea lo que retorna el accept
+    // Usamos string_length para enviar solo los caracteres necesarios (+1 para el '\0')
+    write(client_fd, message_to_send, string_length(message_to_send, MESSAGE_LENGTH));
+}
+
 /*
 *color_format
 *------------
 *Función para darle un color diferente a los mensajes, dependiendo de quien los
 *envie, si son mensajes del mismo cliente deben verse de color azul, si son
 *mensajes enviados por un cliente distinto de color morado y si son 
-*mensajes de parte del servidor deben verse de color amarillo
+*mensajes de parte del servidor "Server" deben verse de color amarillo
 *validara quien lo envio con ayuda de compare_strings 
 *dependiendo del emisor se dara un formato a la salida
 *Notas:
@@ -22,16 +78,16 @@
 *"nombre_emisor"':'' '"mensaje"'\0' 
 *client_name: nombre del cliente 
 */
-void color_format(char message[], char client_name[]){
-    char emissary[MAX_SIZE];
+void color_format(char message[], char receiver[]){
+    char emissary[NAMES_SIZE];
     extract_from_string(message, emissary, ':');
-    if(compare_strings(client_name, emissary) == 1){
-        printf("\n\x1B[34m %s\x1B[0m", message);
-    }
-    else if(compare_strings(emissary, "Server") == 1){
+    if(compare_strings(emissary, "Server\0") == 1){
         printf("\n\x1B[33m %s\x1B[0m", message);
     }
-    else if(compare_strings(emissary, client_name) != 1){
+    else if(compare_strings(receiver, emissary) == 1){
+        printf("\n\x1B[34m %s\x1B[0m", message);
+    }
+    else if(compare_strings(emissary, receiver) != 1){
         printf("\n\x1B[35m %s\x1B[0m", message);
 
     }
@@ -136,6 +192,7 @@ int check_string(char string_to_validate[], FILE *file_pointer, int option){
 **/
 void copy_string(char from_this[], char to_this[], size_t LENGTH){
     int i = 0;
+    if(LENGTH == 0) return;
     while(i < LENGTH && from_this[i] != '\0'){
         to_this[i] = from_this[i];    
         i++;
@@ -198,13 +255,13 @@ char from_int_to_char(int character){
 *-this_string: string base
 *-plus_this: string que se agregara al final de this_string
 */
-void concatenate_string(char this_string[], char plus_this[]){
+void concatenate_string(char this_string[], char plus_this[], size_t MAX_LENGTH){
     int i = 0;
     int j = 0;
-    while(this_string[i] != '\0'){    
+    while(i < MAX_LENGTH -1 && this_string[i] != '\0'){    
         i++;
     }
-    while(plus_this[j] != '\0'){
+    while(i < MAX_LENGTH -1 && plus_this[j] != '\0'){
         this_string[i] = plus_this[j];
         j++;
         i++;
