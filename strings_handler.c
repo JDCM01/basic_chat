@@ -93,6 +93,37 @@ void color_format(char message[], char receiver[]){
     }
 }
 
+/*eliminate_from_string
+*----------------------
+*Función para eliminar un fragmento de una string, va a recorrer el array string
+*hasta que se de una de las posibles condiciones de parada:
+*i alcance la ultima posición del array, el caracter actual de la cadena sea '\0'
+*el caracter actual sea el mark_character
+*despues de esto empezara a copiar caracter a caracter de string a piece
+*hasta que se de una de las condiciones de parada:
+*i alcance la ultima posición del vector, el caracter actual de  string sea '\0'
+*
+*Argumentos:
+*-string: cadena de la cual se eliminara un fragmento
+*-piece: array donde se guardaran los caracteres restantes
+*-mark_character: caracter que marcara el punto desde el cual debere empezar a copiar
+*-MAX_LENGTH: longitud maxima de string
+*/
+void eliminate_from_string(char string[], char piece[], char mark_character, size_t MAX_LENGTH){
+    int i = 0;
+    int j = 0;
+    while(i < MAX_SIZE - 1 && string[i] != '\0' && string[i] != mark_character){
+        i++;
+    }
+    i++;
+    while(i < MAX_SIZE - 1 && string[i] != '\0'){
+        piece[j] = string[i];
+        j++;
+        i++;
+    }
+    piece[j] = '\0';
+}
+
 /*
 *extract_from_string
 *-------------------

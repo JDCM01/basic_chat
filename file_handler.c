@@ -59,12 +59,16 @@ int login(int client_fd, FILE *file_pointer){
     char blocking[] = "Server: denied\0";
     //while(i <= 3){
     send_and_receive(client_fd, message, answer, "Server\0", MAX_SIZE, MAX_SIZE);
-    if(check_string(answer, file_pointer, 1) == 1){ 
+    eliminate_from_string(answer, password, ' ', MAX_SIZE);
+    printf("\nContraseña a comparar:%s", password);
+    if(check_string(password, file_pointer, 1) == 1){ 
         write(client_fd, access, string_length(access, MAX_SIZE));
+        printf("\nAcceso concedido");
         return 1;
     }   
         //i++;
     //}
+    printf("\nAcceso denegado");
     write(client_fd, blocking, string_length(blocking, MAX_SIZE));
     return 0;
 }
@@ -82,12 +86,14 @@ int login(int client_fd, FILE *file_pointer){
 *file_pointer: apuntador al archivo users.txt  
 */
 void register_user(int client_fd, char user_name[],FILE *file_pointer){
-    char password[MAX_SIZE];
+    char answer[MAX_SIZE];
     char user_to_register[MAX_SIZE];
     char ack[MAX_SIZE];
     copy_string(user_name, user_to_register, 100);
     char message[] = "Bienvenido al chat para poder registrarse debe digitar una contraseña\0";
-    send_and_receive(client_fd, message, user_to_register, "Server\0", MAX_SIZE, MAX_SIZE);    
+    send_and_receive(client_fd, message, answer, "Server\0", MAX_SIZE, MAX_SIZE);  
+    char password[MAX_SIZE];
+    eliminate_from_string(answer, password, ' ', MAX_SIZE);  
     insert_into_file(file_pointer, "\n");
     concatenate_string(user_to_register, ";", MAX_SIZE);
     concatenate_string(user_to_register, password, MAX_SIZE);

@@ -67,11 +67,14 @@ void main(){
         perror("Error al escuchar a los clientes");
         exit(EXIT_FAILURE);
     }
-
+    int i = 0;
+    //while(i<=1){
     add_client(server_fd, &stack);
+        //i++;
+    //}
+    //add_client(server_fd, &stack);
     show_list(stack);
     close_sockets(&stack);
-
 }
 
 /*FILE *file_pointer = fopen("users.txt", "a+");

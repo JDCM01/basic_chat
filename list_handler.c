@@ -102,11 +102,11 @@ void add_client(int server_fd, List** stack){
         register_user(client_fd, user_name, file_pointer);
         access = 1;
     }
-    
 
-    //if(access == 1){
-    new_node->user = new_client;
-    new_node->next = *stack;
-    *stack = new_node;
-    //}
+    if(access == 1){
+        new_node->user = new_client;
+        new_node->next = *stack;
+        *stack = new_node;
+    }
+    fclose(file_pointer);
 }
