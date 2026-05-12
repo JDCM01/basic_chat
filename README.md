@@ -5,7 +5,8 @@ Pequeño chat cliente-servidor desarrollado en lenguaje C.
 ## Compilación
 
 ```bash
-gcc main.c -o chat
+gcc server.c -o server -lpthread
+gcc client.c -o client -lpthread
 ```
 
 ## Ejecución
