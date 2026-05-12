@@ -1,7 +1,5 @@
 #ifndef HEADER_H
 #define HEADER_H
-
-
 #include<stdio.h>
 #include<stdlib.h>
 #include<sys/socket.h>
@@ -9,6 +7,7 @@
 #include<netinet/in.h>
 #include<netdb.h>
 #include<unistd.h>
+#include<pthread.h>
 
 /*Constantes
 *-----------
@@ -320,6 +319,9 @@ void insert_into_file(FILE *file_pointer, const char string[]);
 
 /*Funciones y estructuras para el manejo de listas*/
 
+//Candado para mutex MUTual EXclusion
+pthread_mutex_t lock; 
+
 /*Estructura Client
 *------------------
 *componentes:
@@ -331,6 +333,8 @@ void insert_into_file(FILE *file_pointer, const char string[]);
 typedef struct Client{
     char name[NAMES_SIZE];
     int client_fd;
+    struct sockaddr_in client_address;
+    socklen_t addr_len;
 }Client;
 
 /*Estructura List
@@ -345,6 +349,47 @@ typedef struct List{
 }List;
 
 /*
+*thread_args
+*-----------
+*estructura para poder enviarle los argumentos a add_client
+*
+*componentes:
+*server_fd: descriptor de archivo para el socket del server
+*list: apuntador una estructura de tipo list para guardar los clientes conectados
+*/
+typedef struct thread_args{
+    int server_fd;
+    Client* client;
+}thread_args;
+
+/*
+*threads_list
+*------------
+*estructura para hacer una lista de hilos 
+*
+*componentes:
+*thread: es un hilo literalmente
+*next: apuntador al siguiente hilo de la lista
+*/
+typedef struct threads_list{
+    pthread_t thread;
+    struct threads_list* next;
+}threads_list;
+
+/*
+*add_thread
+*----------
+*Función para agregar hilos a la lista va a recibir un apuntador 
+*a una estructura thread_list, va a apartar memoria para el nuevo
+*nodo de la lista y el componente next de este nuevi hilo
+*sera la lista, la lista pasara a ser igual a el nuevo nodo
+*
+*Argumentos:
+*list: la lista de hilos actual
+*/
+void add_thread(threads_list** list);
+
+/*
 *show_list
 *---------
 *función que recorrera una lista compuesta de nodos que seran estructuras Client
@@ -355,6 +400,16 @@ typedef struct List{
 *stack: lista de clientes conectados al servidor
 */
 void show_list(List* stack);
+
+/*
+*add_client
+*----------
+*Función para agregar clientes a la lista
+*
+*argumentos:
+*list: lista actual de clientes conectados
+*/
+void add_client(List** stack);
 
 /*
 *close_sockets
@@ -370,8 +425,8 @@ void show_list(List* stack);
 void close_sockets(List** stack);
 
 /*
-*add_client
-*----------
+*register_login
+*--------------
 *Función para guardar espacio en memoria para un cliente y agregarlo a la lista 
 *de usuarios conectados, hay tres casos posibles a la hora de agregarlo
 *Caso 1, no hay nadie en la lista, en este caso stack sera igual al nuevo nodo creado
@@ -380,10 +435,10 @@ void close_sockets(List** stack);
 *sera el nuevo primer elemento de la lista
 *
 *Argumentos:
-*server_fd:
+*server_fd: descriptor de archivo
 *stack: Lista de clientes conectados
-*/
-void add_client(int server_fd, List** stack);
+*///int server_fd, List** stack
+void* register_login(void* args);
 
 
 #endif

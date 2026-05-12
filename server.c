@@ -9,8 +9,9 @@
 #include<netinet/in.h>
 #include<netdb.h>
 #include <unistd.h>
-
-
+#include<pthread.h>
+//Candado para mutex MUTual EXclusion
+//pthread_mutex_t lock; 
 
 /*
 *main
@@ -27,16 +28,9 @@
 
 //int argc, char *argv[]
 void main(){
-    List* stack = NULL;
-    /* 
-    char server_port[PORT_SIZE];
-    char server_ipv4[IPV4_SIZE];
-    char server_ipv6[IPV6_SIZE];
-    get_arguments(server_port, argv[1], PORT_SIZE);
-    get_arguments(server_ipv4, argv[2], IPV4_SIZE);
-    get_arguments(server_ipv6, argv[3], IPV6_SIZE);
-    printf("\nEl puerto por el cual escuchara el servidor es: %s \nSu dirección ipv4 es: %s\nSu dirección ipv6 es: %s\n",server_port,server_ipv4,server_ipv6);    
-    */
+    int number_of_clients = 1;
+    List* clients_stack = NULL;
+
     /*
     *Creando el socket
     *AF_INET: Indica que se usara IPv4. Si se quiere llegara a usar IPv6, sería AF_INET6.
@@ -45,6 +39,8 @@ void main(){
     *0: Protocolo por defecto osea IP
     */
     color_format("Server: El servidor se va a detener unos segundos hasta que algun cliente se conecte\0", "Server\0");
+    //int* server_fd = (int*)malloc(sizeof(int));
+    
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
     int opt = 1;
 
@@ -63,55 +59,67 @@ void main(){
         exit(EXIT_FAILURE);
     }
 
-    if(listen(server_fd, 1) == -1){//listen retorna 0 cuando las conexiones son exitosas, -1 si hay errores 
+    if(listen(server_fd, number_of_clients) == -1){//listen retorna 0 cuando las conexiones son exitosas, -1 si hay errores 
         perror("Error al escuchar a los clientes");
         exit(EXIT_FAILURE);
     }
     int i = 0;
-    //while(i<=1){
-    add_client(server_fd, &stack);
-        //i++;
-    //}
-    //add_client(server_fd, &stack);
-    show_list(stack);
-    close_sockets(&stack);
-}
+    while(i<number_of_clients){
+        add_client(&clients_stack);
+        i++;
+    }
 
-/*FILE *file_pointer = fopen("users.txt", "a+");
-    fclose(file_pointer);*/
+    List* temporal = clients_stack;
+    while(temporal != NULL){
+        //Deteniendo el proceso hasta que alguien se conecte
+        int client_fd = accept(server_fd,(struct  sockaddr *)&temporal->user->client_address, &temporal->user->addr_len);
 
- /*Ejemplo para darle acceso a alguien que ya se encuentra registrado
-    result = check_string("David\0", MAX_SIZE, file_pointer, 0);
-    
-    if(result == 1){
-        //printf("\nEl nombre de usuario David ya esta ocupado");
-        if(login(file_pointer) == 1){
-            printf("Bienvenido al chat");
+        //capturando el error en caso de que algo falle en la conexión
+        if (client_fd < 0) {
+            perror("Error al aceptar");
+            temporal->next = temporal->next->next;
+            free(temporal); 
         }
         else{
-            printf("Acceso denegado");
+            temporal->user->client_fd = client_fd;
         }
-    }else{
-        //printf("\nEsta disponible");
-        register_user("David\0", file_pointer);
+        temporal = temporal->next;
     }
-    
-    rewind(file_pointer);
-    rewind(file_pointer);
-    print_from_file(file_pointer);
-    fclose(file_pointer);
-    */
 
-    /*Ejemplo de como usar el color_format
-    char message[] = "David: Hola este es un mensaje de prueba\0";
-    char piece[100];
-    extract_from_string(message, piece, ':', 100);
-    color_format(message, piece);
-    char message2[] = "Server: Daniel se ha unido al chat";
-    color_format(message2, piece);
-    char message3[] = "Daniel: Hola David tu ejemplo esta muy interesante";
-    color_format(message3, piece);
-    //cerrando el socket
-    close(server_fd);
-    close(client_fd);
-    */
+    threads_list* thread_list = NULL;
+    threads_list* temp;
+    //thread_args* args = (thread_args*)malloc(sizeof(thread_args));
+    thread_args args[number_of_clients]; 
+    args->server_fd = server_fd;
+    args->client = clients_stack->user;
+    i = 0;
+    while(i<number_of_clients){
+        add_thread(&thread_list);
+        i++;
+    }
+    temporal = clients_stack;
+    i = 0;
+    while(temp != NULL){
+        args[i].server_fd = server_fd;
+        args[i].client->client_fd = temporal->user->client_fd;
+        temporal = temporal->next;
+        i++;
+    }
+    i = 0;
+    temp = thread_list;
+    while(temp != NULL){
+        pthread_create(&temp->thread, NULL, register_login, &args[i]);
+        temp = temp->next;
+        i++;
+    }
+    temp = thread_list;
+    int* partial_result;
+    while(temp!=NULL){
+        pthread_join(temp->thread, (void**)&partial_result);
+        temp = temp->next;
+    }
+
+    //add_client(server_fd, &clients_stack);
+    show_list(clients_stack);
+    close_sockets(&clients_stack);
+}

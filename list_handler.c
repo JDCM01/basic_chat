@@ -1,6 +1,25 @@
 #include"header.h"
 
 /*
+*add_thread
+*----------
+*Función para agregar hilos a la lista va a recibir un apuntador 
+*a una estructura thread_list, va a apartar memoria para el nuevo
+*nodo de la lista y el componente next de este nuevi hilo
+*sera la lista, la lista pasara a ser igual a el nuevo nodo
+*
+*Argumentos:
+*list: la lista de hilos actual
+*/
+void add_thread(threads_list** list){
+    threads_list* new_node = (threads_list*)malloc(sizeof(threads_list));
+    pthread_t* new_thread = (pthread_t*)malloc(sizeof(pthread_t));
+    new_node->thread = *new_thread;
+    new_node->next = *list;
+    *list = new_node;
+}
+
+/*
 *show_list
 *---------
 *función que recorrera una lista compuesta de nodos que seran estructuras Client
@@ -48,6 +67,27 @@ void close_sockets(List** stack){
 /*
 *add_client
 *----------
+*Función para agregar clientes a la lista
+*
+*argumentos:
+*list: lista actual de clientes conectados
+*/
+void add_client(List** stack){
+    List* new_node = (List*)malloc(sizeof(List));
+    Client* new_client = (Client*)malloc(sizeof(Client));
+    //creando una nueva estructura para el cliente que se conecte
+    struct sockaddr_in client_address;
+    socklen_t addr_len = sizeof(client_address);
+    new_node->user = new_client;
+    new_node->user->addr_len = addr_len;
+    new_node->user->client_address = client_address;
+    new_node->next = *stack;
+    *stack = new_node;
+}
+
+/*
+*register_login
+*--------------
 *Función para guardar espacio en memoria para un cliente y agregarlo a la lista 
 *de usuarios conectados, hay tres casos posibles a la hora de agregarlo
 *Caso 1, no hay nadie en la lista, en este caso stack sera igual al nuevo nodo creado
@@ -58,55 +98,40 @@ void close_sockets(List** stack){
 *Argumentos:
 *server_fd: descriptor de archivo
 *stack: Lista de clientes conectados
-*/
-void add_client(int server_fd, List** stack){
-    Client* new_client = (Client*)malloc(sizeof(Client));
-    List* new_node = (List*) malloc(sizeof(List));
-    
-    //creando una nueva estructura para el cliente que se conecte
-    struct sockaddr_in client_address;
-    socklen_t addr_len = sizeof(client_address);
-
-    //Deteniendo el proceso hasta que alguien se conecte
-    int client_fd = accept(server_fd,(struct  sockaddr *)&client_address , &addr_len);
-
-    //capturando el error en caso de que algo falle en la conexión
-    if (client_fd < 0) {
-        perror("Error al aceptar");
-        free(new_client); 
-        free(new_node);
-        return;
-    }
-
-    new_client->client_fd = client_fd;
-
-    int access;
+*///int server_fd, List** stack
+void* register_login(void* args){
+    thread_args* arguments = (thread_args*)args;
+    int* access = malloc(sizeof(int));
     char message[] = "Server: Conexión establecida con: \0";
     char answer[NAMES_SIZE];
     char user_name[NAMES_SIZE];
-    int read_bytes = read(client_fd, user_name, sizeof(user_name));
+    pthread_mutex_lock(&lock); // se vuelve a cerrar el candado ya que entramos en una nueva sección critica
+    int read_bytes = read(arguments->client->client_fd, user_name, sizeof(user_name));
+    pthread_mutex_unlock(&lock); // se abre el candado ya que salimos de la sección critica y debo darle la oportunidad 
+    //a otro cliente de que envie su mensaje
     if (read_bytes > 0) {
         user_name[read_bytes] = '\0'; // Aseguramos que la cadena termine en nulo
-        copy_string(user_name, new_client->name, NAMES_SIZE);
+        copy_string(user_name, arguments->client->name, NAMES_SIZE);
         concatenate_string(message, user_name, MAX_SIZE);
         color_format(message, "Server\0");
     }
+
+    pthread_mutex_lock(&lock); // se cierra el candado ya que vamos a modificar un archivo compartido
     FILE *file_pointer;
     file_pointer = fopen("users.txt","a+");
     if(check_string(user_name, file_pointer, 0) == 1){
         color_format("Server: Usuario encontrado se procede al login\0", "Server\0");
-        access = login(client_fd, file_pointer);
+        *access = login(arguments->client->client_fd, file_pointer);
     }
     else{
         color_format("Server: No se encontro al usuario entonces se procede a guardarlo\0", "Server\0");
-        register_user(client_fd, user_name, file_pointer);
-        access = 1;
+        register_user(arguments->client->client_fd, user_name, file_pointer);
+        *access = 1;
     }
 
-    if(access == 1){
-        new_node->user = new_client;
-        new_node->next = *stack;
-        *stack = new_node;
-    }
     fclose(file_pointer);
+    pthread_mutex_unlock(&lock); // se abre el candado ya que salimos de la sección critica y debo darle la oportunidad 
+    //a otro cliente de que se registre
+    pthread_exit(access); // Devolvemos el puntero al resultado
+    return NULL;
 }
