@@ -13,8 +13,6 @@
 */
 void add_thread(threads_list** list){
     threads_list* new_node = (threads_list*)malloc(sizeof(threads_list));
-    pthread_t* new_thread = (pthread_t*)malloc(sizeof(pthread_t));
-    new_node->thread = *new_thread;
     new_node->next = *list;
     *list = new_node;
 }
@@ -72,17 +70,17 @@ void close_sockets(List** stack){
 *argumentos:
 *list: lista actual de clientes conectados
 */
-void add_client(List** stack){
+List* add_client(List** stack){
     List* new_node = (List*)malloc(sizeof(List));
     Client* new_client = (Client*)malloc(sizeof(Client));
     //creando una nueva estructura para el cliente que se conecte
     struct sockaddr_in client_address;
-    socklen_t addr_len = sizeof(client_address);
     new_node->user = new_client;
-    new_node->user->addr_len = addr_len;
     new_node->user->client_address = client_address;
+    printf("\ncliente, dirección de buffer: %p, tamaño: %zu\n", &new_node->user->client_address, sizeof(new_node->user->addr_len));
     new_node->next = *stack;
     *stack = new_node;
+    return new_node; 
 }
 
 /*
@@ -105,9 +103,9 @@ void* register_login(void* args){
     char message[] = "Server: Conexión establecida con: \0";
     char answer[NAMES_SIZE];
     char user_name[NAMES_SIZE];
-    pthread_mutex_lock(&lock); // se vuelve a cerrar el candado ya que entramos en una nueva sección critica
+    //pthread_mutex_lock(&lock); // se vuelve a cerrar el candado ya que entramos en una nueva sección critica
     int read_bytes = read(arguments->client->client_fd, user_name, sizeof(user_name));
-    pthread_mutex_unlock(&lock); // se abre el candado ya que salimos de la sección critica y debo darle la oportunidad 
+    //pthread_mutex_unlock(&lock); // se abre el candado ya que salimos de la sección critica y debo darle la oportunidad 
     //a otro cliente de que envie su mensaje
     if (read_bytes > 0) {
         user_name[read_bytes] = '\0'; // Aseguramos que la cadena termine en nulo

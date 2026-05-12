@@ -355,7 +355,8 @@ typedef struct List{
 *
 *componentes:
 *server_fd: descriptor de archivo para el socket del server
-*list: apuntador una estructura de tipo list para guardar los clientes conectados
+*Client: apuntador una estructura de tipo Client para pasar a login_register lo que necesita 
+*
 */
 typedef struct thread_args{
     int server_fd;
@@ -409,7 +410,7 @@ void show_list(List* stack);
 *argumentos:
 *list: lista actual de clientes conectados
 */
-void add_client(List** stack);
+List* add_client(List** stack);
 
 /*
 *close_sockets

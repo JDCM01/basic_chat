@@ -28,7 +28,7 @@
 
 //int argc, char *argv[]
 void main(){
-    int number_of_clients = 1;
+    int number_of_clients = 2;
     List* clients_stack = NULL;
 
     /*
@@ -63,60 +63,64 @@ void main(){
         perror("Error al escuchar a los clientes");
         exit(EXIT_FAILURE);
     }
-    int i = 0;
-    while(i<number_of_clients){
-        add_client(&clients_stack);
-        i++;
-    }
+    
+    int i = 0;int connected_clients = 0;
+    while(connected_clients < number_of_clients) {
 
-    List* temporal = clients_stack;
-    while(temporal != NULL){
-        //Deteniendo el proceso hasta que alguien se conecte
-        int client_fd = accept(server_fd,(struct  sockaddr *)&temporal->user->client_address, &temporal->user->addr_len);
+        Client* new_client = (Client*)malloc(sizeof(Client));
+        new_client->addr_len = sizeof(struct sockaddr_in);
 
-        //capturando el error en caso de que algo falle en la conexión
-        if (client_fd < 0) {
+        printf("Esperando cliente #%d...\n", connected_clients + 1);
+
+        int fd = accept(server_fd, (struct sockaddr *)&new_client->client_address, &new_client->addr_len);
+
+        if (fd < 0) {
             perror("Error al aceptar");
-            temporal->next = temporal->next->next;
-            free(temporal); 
+            free(new_client); // Si falla, solo liberamos este intento
+            continue; // Reintentamos la conexión
         }
-        else{
-            temporal->user->client_fd = client_fd;
-        }
-        temporal = temporal->next;
+
+        printf("Cliente conectado exitosamente.\n");
+        new_client->client_fd = fd;
+    
+        List* new_node = (List*)malloc(sizeof(List));
+        new_node->user = new_client;
+        new_node->next = clients_stack;
+        clients_stack = new_node;
+
+        connected_clients++;
     }
 
     threads_list* thread_list = NULL;
-    threads_list* temp;
-    //thread_args* args = (thread_args*)malloc(sizeof(thread_args));
-    thread_args args[number_of_clients]; 
-    args->server_fd = server_fd;
-    args->client = clients_stack->user;
+    threads_list* temporal_threads_list;
+    thread_args args[connected_clients]; 
     i = 0;
-    while(i<number_of_clients){
+    while(i<connected_clients){
         add_thread(&thread_list);
         i++;
     }
-    temporal = clients_stack;
+    printf("\nCrea los hilos");
+    List* temporal_client_list = clients_stack;
     i = 0;
-    while(temp != NULL){
+    while(temporal_client_list != NULL){
         args[i].server_fd = server_fd;
-        args[i].client->client_fd = temporal->user->client_fd;
-        temporal = temporal->next;
+        args[i].client = temporal_client_list->user;
+        temporal_client_list = temporal_client_list->next;
         i++;
     }
+    printf("\ncrea los argumentos");
     i = 0;
-    temp = thread_list;
-    while(temp != NULL){
-        pthread_create(&temp->thread, NULL, register_login, &args[i]);
-        temp = temp->next;
+    temporal_threads_list = thread_list;
+    while(temporal_threads_list != NULL){
+        pthread_create(&temporal_threads_list->thread, NULL, register_login, &args[i]);
+        temporal_threads_list = temporal_threads_list->next;
         i++;
     }
-    temp = thread_list;
+    temporal_threads_list = thread_list;
     int* partial_result;
-    while(temp!=NULL){
-        pthread_join(temp->thread, (void**)&partial_result);
-        temp = temp->next;
+    while(temporal_threads_list!=NULL){
+        pthread_join(temporal_threads_list->thread, (void**)&partial_result);
+        temporal_threads_list = temporal_threads_list->next;
     }
 
     //add_client(server_fd, &clients_stack);
