@@ -63,11 +63,12 @@ void main(){
     char emissary[NAMES_SIZE];
     color_format("Server: Para poder unirse al chat digite el nombre de usuario que desea usar: \0", "\0");
     get_string(user_name);
+    //Mandando nombre de usuario
     write(client_fd, user_name, string_length(user_name, NAMES_SIZE));
-    //receive_message(client_fd, user_name);
-    //while(compare_strings(access, "granted\0") == 0){
+    //Mandando contraseña
     receive_and_send(client_fd, access, user_name, MAX_SIZE, NAMES_SIZE);
-    //}
+    //respuesta por parte del servidor acceso concedido denegado
     read(client_fd, incoming_message, sizeof(incoming_message));
+    color_format(incoming_message, user_name);
     close(client_fd);
 }

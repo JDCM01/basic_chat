@@ -60,15 +60,10 @@ int login(int client_fd, FILE *file_pointer){
     //while(i <= 3){
     send_and_receive(client_fd, message, answer, "Server\0", MAX_SIZE, MAX_SIZE);
     eliminate_from_string(answer, password, ' ', MAX_SIZE);
-    printf("\nContraseña a comparar:%s", password);
     if(check_string(password, file_pointer, 1) == 1){ 
         write(client_fd, access, string_length(access, MAX_SIZE));
-        printf("\nAcceso concedido");
         return 1;
     }   
-        //i++;
-    //}
-    printf("\nAcceso denegado");
     write(client_fd, blocking, string_length(blocking, MAX_SIZE));
     return 0;
 }

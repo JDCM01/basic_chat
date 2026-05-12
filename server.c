@@ -76,11 +76,10 @@ void main(){
 
         if (fd < 0) {
             perror("Error al aceptar");
-            free(new_client); // Si falla, solo liberamos este intento
-            continue; // Reintentamos la conexión
+            free(new_client);
+            continue; 
         }
 
-        printf("Cliente conectado exitosamente.\n");
         new_client->client_fd = fd;
     
         List* new_node = (List*)malloc(sizeof(List));
@@ -99,7 +98,6 @@ void main(){
         add_thread(&thread_list);
         i++;
     }
-    printf("\nCrea los hilos");
     List* temporal_client_list = clients_stack;
     i = 0;
     while(temporal_client_list != NULL){
@@ -108,7 +106,6 @@ void main(){
         temporal_client_list = temporal_client_list->next;
         i++;
     }
-    printf("\ncrea los argumentos");
     i = 0;
     temporal_threads_list = thread_list;
     while(temporal_threads_list != NULL){
@@ -118,12 +115,38 @@ void main(){
     }
     temporal_threads_list = thread_list;
     int* partial_result;
+    int results[connected_clients];
+    i = 0;
     while(temporal_threads_list!=NULL){
         pthread_join(temporal_threads_list->thread, (void**)&partial_result);
         temporal_threads_list = temporal_threads_list->next;
+        results[i] = *partial_result;
+        i++;
     }
+    
+    temporal_client_list = clients_stack;
+    i = 0;
+    List* curr = clients_stack;
+    List* prev = NULL;
 
-    //add_client(server_fd, &clients_stack);
+    while (curr != NULL && i < connected_clients) {
+        if (results[i] != 1) {
+            if (prev == NULL) {
+                clients_stack = curr->next;
+            } else {
+                prev->next = curr->next;
+            }
+            close(curr->user->client_fd);
+            free(curr->user);
+            List* temp = curr;
+            curr = curr->next;
+            free(temp);
+        } else {
+            prev = curr;
+            curr = curr->next;
+        }
+        i++;
+    }
     show_list(clients_stack);
     close_sockets(&clients_stack);
 }

@@ -131,5 +131,4 @@ void* register_login(void* args){
     pthread_mutex_unlock(&lock); // se abre el candado ya que salimos de la sección critica y debo darle la oportunidad 
     //a otro cliente de que se registre
     pthread_exit(access); // Devolvemos el puntero al resultado
-    return NULL;
 }
