@@ -1,13 +1,29 @@
 #ifndef HEADER_H
 #define HEADER_H
-#include<stdio.h>
-#include<stdlib.h>
-#include<sys/socket.h>
-#include<arpa/inet.h>
-#include<netinet/in.h>
-#include<netdb.h>
-#include<unistd.h>
-#include<pthread.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h> // Muy importante para strncpy, etc.
+
+#ifdef _WIN32
+    /* --- CONFIGURACIÓN PARA WINDOWS --- */
+    #include <winsock2.h>
+    #include <ws2tcpip.h> // Necesario para funciones modernas de IP
+    #pragma comment(lib, "ws2_32.lib")
+    
+    // En Windows, 'unistd.h' no existe de forma estándar
+    // Definimos este alias para que 'close' funcione igual que en Linux
+    #define close closesocket 
+#else
+    /* --- CONFIGURACIÓN PARA LINUX --- */
+    #include <sys/socket.h>
+    #include <arpa/inet.h>
+    #include <netinet/in.h>
+    #include <netdb.h>
+    #include <unistd.h>
+#endif
+
+#include <pthread.h>
 
 /*Constantes
 *-----------
