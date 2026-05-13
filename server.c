@@ -59,13 +59,13 @@ void* listen_thread(void* args){
         char message[MAX_SIZE];
         int read_bytes = read(arguments->especifical_client->client_fd, message, sizeof(message));
         if (read_bytes > 0) {
-            message[read_bytes] = '\0'; // Aseguramos que la cadena termine en nulo
+            message[read_bytes] = ' '; // Aseguramos que la cadena termine en nulo
             broadcast(arguments->clients_stack, message);
         }
         else{
             // El cliente cerró o error
-            concatenate_string(message, "Server: el usuario \0", MAX_SIZE);//Probablemente halla problemas aqui
-            concatenate_string(message, arguments->especifical_client->name, NAMES_SIZE);
+            concatenate_string(message, "Server: el usuario", MAX_SIZE);//Probablemente halla problemas aqui
+            concatenate_string(message, arguments->especifical_client->name, MAX_SIZE);
             concatenate_string(message, "se ha desconectado", MAX_SIZE);
             broadcast(arguments->clients_stack, message);
             close(arguments->especifical_client->client_fd);
@@ -91,7 +91,14 @@ void* listen_thread(void* args){
 
 //int argc, char *argv[]
 void main(){
-    int number_of_clients = 2;
+    #ifdef _WIN32
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        printf("Fallo en Winsock.\n");
+        return 1;
+    }
+    #endif
+    int number_of_clients = 3;
     List* clients_stack = NULL;
 
     /*
@@ -223,37 +230,47 @@ void main(){
         i++;
     }
 
-    //creando hilos para escuchar a los clientes
+    // ... (tu código de filtrado de acceso está bien) ...
+
+    // creando hilos para escuchar a los clientes
     threads_list* listening_threads = NULL;
-    i = 0;
-    while(i<connected_clients){ 
+    for(int j = 0; j < amount_of_clients; j++) {
         add_thread(&listening_threads);
-        i++;
     }
-    
-    //creando los argumentos para listen_thread
-    List* temporal_listener = listening_threads;
-    List* temporal_client = clients_stack;
+
+    // Preparando argumentos e iniciando hilos en un solo recorrido
+    threads_list* curr_thread = listening_threads;
+    List* curr_client = clients_stack;
     i = 0;
-    listen_thread_arguments listen_arguments[amount_of_clients];//amount of clients podria dar fallas en tal caso usar connected_clients
-    while(temporal_client != NULL){
-        listen_arguments[i].especifical_client = temporal_client->user;
-        listen_arguments[i].clients_stack = clients_stack;
-        temporal_client = temporal_client->next;
+
+    listen_thread_arguments* listen_args = malloc(sizeof(listen_thread_arguments) * amount_of_clients);
+
+    while(curr_client != NULL && curr_thread != NULL) {
+        listen_args[i].especifical_client = curr_client->user;
+        listen_args[i].clients_stack = clients_stack; // OJO: Usa mutex al usar esto en el hilo
+
+        // PASO CORRECTO: Apuntar al campo 'thread' del nodo
+        if (pthread_create(&(curr_thread->thread), NULL, listen_thread, &listen_args[i]) != 0) {
+            perror("Fallo al crear hilo");
+        }
+
+        curr_client = curr_client->next;
+        curr_thread = curr_thread->next;
         i++;
     }
 
-    //"Despliego" los hilos listener
-    i = 0;
-    temporal_listener = listening_threads;
-    while(temporal_listener != NULL){
-        pthread_create(&temporal_listener, NULL, listen_thread, &listen_arguments[i]);
-        temporal_listener = temporal_listener->next;
-        i++;
+    printf("\nHilos de escucha desplegados correctamente.\n");
+
+    // IMPORTANTE:
+    // Si llamas a close_sockets() inmediatamente aquí, 
+    // matarás las conexiones ANTES de que los hilos puedan trabajar.
+    // Debes esperar con un join o un bucle infinito.
+
+    for(curr_thread = listening_threads; curr_thread != NULL; curr_thread = curr_thread->next) {
+        pthread_join(curr_thread->thread, NULL);
     }
 
-    show_list(clients_stack);
-
-    //Cerrando las conexiones con los clientes
+    // Ahora sí, cuando todos terminen, limpiamos
+    free(listen_args);
     close_sockets(&clients_stack);
 }

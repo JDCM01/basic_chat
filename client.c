@@ -10,15 +10,16 @@
 #include<netdb.h>
 #include<unistd.h>
 
-/*reading_arguments
+/*threads_arguments
 *------------------
 *componentes:
-*-user_name: nombre del usuario
-*-client_fd: descriptor de archivos del cliente*/
-typedef struct reading_arguments{
+*user_name: nombre del cliente
+*client_fd: descriptor de archivos del cliente
+*/
+typedef struct threads_arguments{
     char user_name[NAMES_SIZE];
     int client_fd;
-}reading_arguments;
+}threads_arguments;
 
 /*reading_thread
 *---------------
@@ -29,29 +30,18 @@ typedef struct reading_arguments{
 *-user_name: nombre del cliente
 *-client_fd: file descriptor del cliente*/
 void* reading_thread(void* args){
-    reading_arguments* arguments = (reading_arguments*)args;
+    threads_arguments* arguments = (threads_arguments*)args;
     while(1){
-        printf("\nMensaje: ");
         char message_to_send[MAX_SIZE];
         message_to_send[0] = '\0';
         char string[MAX_SIZE];
         concatenate_string(message_to_send, arguments->user_name, MAX_SIZE);//probablemente halla problemas aqui
-        concatenate_string(message_to_send, ": \0", MAX_SIZE);
+        concatenate_string(message_to_send, ": ", MAX_SIZE);
         get_string(string);
         concatenate_string(message_to_send, string, MAX_SIZE);
         write(arguments->client_fd, message_to_send, string_length(message_to_send, MAX_SIZE));
     }
 }
-
-/*listening_arguments
-*--------------------
-*componentes:
-*client_fd: descriptor de archivos del cliente
-*user_name: nombre del cliente*/
-typedef struct listening_arguments{
-    int client_fd;
-    char user_name[NAMES_SIZE];
-}listening_arguments;
 
 /*listening_thread
 *-----------------
@@ -62,13 +52,14 @@ typedef struct listening_arguments{
 *user_name: nombre del cliente
 */
 void* listening_thread(void* args){
-    listening_arguments* arguments = (listening_arguments*)args;
+    threads_arguments* arguments = (threads_arguments*)args;
     char incoming_message[MAX_SIZE];
     while(1){
         int read_bytes = read(arguments->client_fd, incoming_message, sizeof(incoming_message));
         if(read_bytes > 0) {
             incoming_message[read_bytes] = '\0'; // Aseguramos que la cadena termine en nulo
             color_format(incoming_message, arguments->user_name);
+            fflush(stdout); // <--- OBLIGA a la consola a mostrar el mensaje AHORA
         }
         else{
             printf("\nconexión terminada");
@@ -93,6 +84,13 @@ void* listening_thread(void* args){
 
 //size_t argc, char *argv[]
 void main(){
+    #ifdef _WIN32
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        printf("Fallo en Winsock.\n");
+        return 1;
+    }
+    #endif
     /*
     *Creando el socket
     *AF_INET: Indica que se usara IPv4. Si se quiere llegara a usar IPv6, sería AF_INET6.
@@ -131,5 +129,22 @@ void main(){
     //respuesta por parte del servidor acceso concedido denegado
     read(client_fd, incoming_message, sizeof(incoming_message));
     color_format(incoming_message, user_name);
+
+    //creando los argumentos para los hilos
+    threads_arguments arguments;
+    arguments.client_fd = client_fd;
+    copy_string(user_name, arguments.user_name, NAMES_SIZE);
+
+    //Creando los hilos para escuchar y enviar mensajes constantemente
+    pthread_t l_thread;
+    pthread_t r_thread;
+    pthread_create(&l_thread,NULL, listening_thread, &arguments);
+    pthread_create(&r_thread,NULL, reading_thread, &arguments);
+
+    //esperando a que todos los hilos terminen
+    pthread_join(l_thread, NULL);
+    pthread_join(r_thread, NULL);
+
+    //cerrando conexion
     close(client_fd);
 }

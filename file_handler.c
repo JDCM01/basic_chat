@@ -55,9 +55,8 @@ int login(int client_fd, FILE *file_pointer){
     char message[] = "Para poder continuar debera digitar su contraseña: \0";
     char password[MAX_SIZE];
     char ack[MAX_SIZE];
-    char access[] = "Server: granted\0";
-    char blocking[] = "Server: denied\0";
-    //while(i <= 3){
+    char access[] = "Server: Access granted\0";
+    char blocking[] = "Server: Access denied\0";
     send_and_receive(client_fd, message, answer, "Server\0", MAX_SIZE, MAX_SIZE);
     eliminate_from_string(answer, password, ' ', MAX_SIZE);
     if(check_string(password, file_pointer, 1) == 1){ 
@@ -95,8 +94,7 @@ void register_user(int client_fd, char user_name[],FILE *file_pointer){
     concatenate_string(user_to_register, ";", MAX_SIZE);
     concatenate_string(user_to_register, "\n\0", MAX_SIZE);
     insert_into_file(file_pointer, user_to_register);
-    write(client_fd, "granted\0", string_length("granted\0", MAX_SIZE));
-    read(client_fd, ack, MAX_SIZE);
+    write(client_fd, "Server: Access granted\0", string_length("Server: Access granted\0", MAX_SIZE));
 }
 
 

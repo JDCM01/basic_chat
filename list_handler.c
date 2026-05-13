@@ -96,17 +96,14 @@ List* add_client(List** stack){
 *Argumentos:
 *server_fd: descriptor de archivo
 *stack: Lista de clientes conectados
-*///int server_fd, List** stack
+*/
 void* register_login(void* args){
     thread_args* arguments = (thread_args*)args;
     int* access = malloc(sizeof(int));
     char message[] = "Server: Conexión establecida con: \0";
     char answer[NAMES_SIZE];
     char user_name[NAMES_SIZE];
-    //pthread_mutex_lock(&lock); // se vuelve a cerrar el candado ya que entramos en una nueva sección critica
     int read_bytes = read(arguments->client->client_fd, user_name, sizeof(user_name));
-    //pthread_mutex_unlock(&lock); // se abre el candado ya que salimos de la sección critica y debo darle la oportunidad 
-    //a otro cliente de que envie su mensaje
     if (read_bytes > 0) {
         user_name[read_bytes] = '\0'; // Aseguramos que la cadena termine en nulo
         copy_string(user_name, arguments->client->name, NAMES_SIZE);
