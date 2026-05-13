@@ -198,6 +198,7 @@ void main(){
     
     //solo me voy a quedar con los hilos que obtuvieron acceso 
     temporal_client_list = clients_stack;
+    int amount_of_clients = 0;
     i = 0;
     List* curr = clients_stack;
     List* prev = NULL;
@@ -206,7 +207,7 @@ void main(){
         if (results[i] != 1) {
             if (prev == NULL) {
                 clients_stack = curr->next;
-            } else {
+            } else {threads_list* thread_list = NULL;
                 prev->next = curr->next;
             }
             close(curr->user->client_fd);
@@ -217,7 +218,38 @@ void main(){
         } else {
             prev = curr;
             curr = curr->next;
+            amount_of_clients++;
         }
+        i++;
+    }
+
+    //creando hilos para escuchar a los clientes
+    threads_list* listening_threads = NULL;
+    i = 0;
+    while(i<connected_clients){ 
+        add_thread(&listening_threads);
+        i++;
+    }
+    
+    //creando los argumentos para listen_thread
+    List* temporal_listener = listening_threads;
+    List* temporal_client = clients_stack;
+    i = 0;
+    listen_thread_arguments listen_arguments[amount_of_clients];//amount of clients podria dar fallas en tal caso usar connected_clients
+    while(temporal_client != NULL){
+        listen_arguments[i].especifical_client = temporal_client->user;
+        listen_arguments[i].clients_stack = clients_stack;
+        temporal_client = temporal_client->next;
+        i++;
+    }
+
+
+    //"Despliego" los hilos listener
+    i = 0;
+    temporal_listener = listening_threads;
+    while(temporal_listener != NULL){
+        pthread_create(&temporal_listener, NULL, listen_thread, &listen_arguments[i]);
+        temporal_listener = temporal_listener->next;
         i++;
     }
 
