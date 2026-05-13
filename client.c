@@ -10,7 +10,73 @@
 #include<netdb.h>
 #include<unistd.h>
 
+/*reading_arguments
+*------------------
+*componentes:
+*-user_name: nombre del usuario
+*-client_fd: descriptor de archivos del cliente*/
+typedef struct reading_arguments{
+    char user_name[NAMES_SIZE];
+    int client_fd;
+}reading_arguments;
 
+/*reading_thread
+*---------------
+*Función que estara pidiendole al usuario mensajes constantemente 
+*y enviandoselas al servidor
+*
+*argumentos:
+*-user_name: nombre del cliente
+*-client_fd: file descriptor del cliente*/
+void* reading_thread(void* args){
+    reading_arguments* arguments = (reading_arguments*)args;
+    while(1){
+        printf("\nMensaje: ");
+        char message_to_send[MAX_SIZE];
+        message_to_send[0] = '\0';
+        char string[MAX_SIZE];
+        concatenate_string(message_to_send, arguments->user_name, MAX_SIZE);//probablemente halla problemas aqui
+        concatenate_string(message_to_send, ": \0", MAX_SIZE);
+        get_string(string);
+        concatenate_string(message_to_send, string, MAX_SIZE);
+        write(arguments->client_fd, message_to_send, string_length(message_to_send, MAX_SIZE));
+    }
+}
+
+/*listening_arguments
+*--------------------
+*componentes:
+*client_fd: descriptor de archivos del cliente
+*user_name: nombre del cliente*/
+typedef struct listening_arguments{
+    int client_fd;
+    char user_name[NAMES_SIZE];
+}listening_arguments;
+
+/*listening_thread
+*-----------------
+*Función creada para estar constantemente revisando si le llega un mensaje al cliente 
+*
+*argumentos:
+*client_fd: file descriptor del cliente
+*user_name: nombre del cliente
+*/
+void* listening_thread(void* args){
+    listening_arguments* arguments = (listening_arguments*)args;
+    char incoming_message[MAX_SIZE];
+    while(1){
+        int read_bytes = read(arguments->client_fd, incoming_message, sizeof(incoming_message));
+        if(read_bytes > 0) {
+            incoming_message[read_bytes] = '\0'; // Aseguramos que la cadena termine en nulo
+            color_format(incoming_message, arguments->user_name);
+        }
+        else{
+            printf("\nconexión terminada");
+            close(arguments->client_fd);
+            break;
+        }
+    }
+}
 
 /*
 *main
@@ -27,14 +93,6 @@
 
 //size_t argc, char *argv[]
 void main(){
-    /*
-    char port[5];
-    char ipv4[20];
-    get_arguments(port, argv[1], 5);
-    get_arguments(ipv4, argv[2], 20);
-    copy_string(port, port, 5);
-    copy_string(ipv4, ipv4, 20);
-    */
     /*
     *Creando el socket
     *AF_INET: Indica que se usara IPv4. Si se quiere llegara a usar IPv6, sería AF_INET6.
@@ -63,10 +121,13 @@ void main(){
     char emissary[NAMES_SIZE];
     color_format("Server: Para poder unirse al chat digite el nombre de usuario que desea usar: \0", "\0");
     get_string(user_name);
+    
     //Mandando nombre de usuario
     write(client_fd, user_name, string_length(user_name, NAMES_SIZE));
+    
     //Mandando contraseña
     receive_and_send(client_fd, access, user_name, MAX_SIZE, NAMES_SIZE);
+    
     //respuesta por parte del servidor acceso concedido denegado
     read(client_fd, incoming_message, sizeof(incoming_message));
     color_format(incoming_message, user_name);

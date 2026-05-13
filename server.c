@@ -57,14 +57,14 @@ void* listen_thread(void* args){
     listen_thread_arguments* arguments = (listen_thread_arguments*)args;
     while(1){
         char message[MAX_SIZE];
-        int bytes_leidos = read(arguments->especifical_client->client_fd, message, sizeof(message));
-        if (bytes_leidos > 0) {
-            message[bytes_leidos] = '\0'; // Aseguramos que la cadena termine en nulo
+        int read_bytes = read(arguments->especifical_client->client_fd, message, sizeof(message));
+        if (read_bytes > 0) {
+            message[read_bytes] = '\0'; // Aseguramos que la cadena termine en nulo
             broadcast(arguments->clients_stack, message);
         }
         else{
             // El cliente cerró o error
-            concatenate_string(message, "Server: el usuario \0", MAX_SIZE);
+            concatenate_string(message, "Server: el usuario \0", MAX_SIZE);//Probablemente halla problemas aqui
             concatenate_string(message, arguments->especifical_client->name, NAMES_SIZE);
             concatenate_string(message, "se ha desconectado", MAX_SIZE);
             broadcast(arguments->clients_stack, message);
@@ -242,7 +242,6 @@ void main(){
         temporal_client = temporal_client->next;
         i++;
     }
-
 
     //"Despliego" los hilos listener
     i = 0;
